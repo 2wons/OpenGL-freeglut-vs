@@ -3,3 +3,4 @@ x64/
 
 # Visual Studio files and folder
 .vs/
+*.user
