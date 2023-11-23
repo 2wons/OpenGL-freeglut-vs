@@ -1,198 +1,108 @@
-#include <iostream>
+
+
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <stdio.h>
 
 using namespace std;
+void displayObject();
+void init();
 
-float faceColor[3] = { 0.1f, 0.2f, 0.4f };
-
-float leftEyeColor[3] = { 1.0f, 1.0f, 1.0f };
-
-float rightEyeColor[3] = { 1.0f, 1.0f, 1.0f };
-
-GLfloat facePos[2] = { 0.0f, 0.0f };
-//test
-
-
-GLuint faceVBO, leftEyeVBO, rightEyeVBO, mouthVBO;
-
-void createVBO(GLuint* vboId, GLfloat* vertices, int size)
-{
-    glGenBuffers(1, vboId);
-    glBindBuffer(GL_ARRAY_BUFFER, *vboId);
-    glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
-}
-
-void updateVBO(GLuint* vboId, GLfloat* vertices, int size) {
-    glBindBuffer(GL_ARRAY_BUFFER, *vboId);
-    glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
-}
-
-void drawVBO(GLuint vboId, int size, float* color)
-{
-    glBindBuffer(GL_ARRAY_BUFFER, vboId);
-    glVertexPointer(3, GL_FLOAT, 0, 0);
-    glColor3fv(color);
-    glDrawArrays(GL_POLYGON, 0, size);
-}
-
-void face()
-{
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-
-    // Draw face
-    drawVBO(faceVBO, 4, faceColor);
-
-    // Draw right eye
-    drawVBO(rightEyeVBO, 4, rightEyeColor);
-
-    // Draw left eye
-    drawVBO(leftEyeVBO, 4, leftEyeColor);
-
-    // Draw mouth
-    glBindBuffer(GL_ARRAY_BUFFER, mouthVBO);
-    glColor3f(1.0f, 0.0f, 0.0f);
-    glLineWidth(5);
-    glVertexPointer(3, GL_FLOAT, 0, 0);
-    glDrawArrays(GL_LINES, 0, 2);
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glutSwapBuffers();  // Swap the front and back buffers
-}
-
-void changeEyeColor(float arr[])
-{
-    arr[0] = rand() / (float)RAND_MAX;
-    arr[1] = rand() / (float)RAND_MAX;
-    arr[2] = rand() / (float)RAND_MAX;
-}
-
-void onClick(int button, int state, int x, int y)
-{
-    if (state != GLUT_DOWN) return;
-
-    switch (button)
-    {
-    case GLUT_LEFT_BUTTON:    changeEyeColor(leftEyeColor);  break;
-
-    case GLUT_RIGHT_BUTTON:   changeEyeColor(rightEyeColor); break;
-    }
-
-    glutPostRedisplay();
-}
+float cameraX = 0.0, cameraY = 3.0, cameraZ = 4.0;  // camera
 
 void onKeyPress(unsigned char key, int x, int y)
 {
-    bool positionChanged = false;
-    switch (key) {
-    case 27:
-        exit(0);
-        break;
-    case 'w':
-    case 'W':
-        facePos[1] += 0.05f;
-        positionChanged = true;
-        break;
-    case 'a':
-    case 'A':
-        facePos[0] -= 0.05f;
-        positionChanged = true;
-        break;
-    case 's':
-    case 'S':
-        facePos[1] -= 0.05f;
-        positionChanged = true;
-        break;
-    case 'd':
-    case 'D':
-        facePos[0] += 0.05f;
-        positionChanged = true;
-        break;
-    }
-
-    if (positionChanged)
+    switch (key)
     {
-        GLfloat faceVertices[] = {
-            -0.5f + facePos[0], -0.5f + facePos[1],  0.0f,
-            -0.5f + facePos[0],  0.5f + facePos[1],  0.0f,
-            0.5f + facePos[0],  0.5f + facePos[1],  0.0f,
-            0.5f + facePos[0], -0.5f + facePos[1],  0.0f,
-        };
-
-        GLfloat leftEyeVertices[] = {
-            -0.3f + facePos[0], 0.1f + facePos[1], 0.0f,
-            -0.3f + facePos[0], 0.2f + facePos[1], 0.0f,
-            -0.2f + facePos[0], 0.2f + facePos[1], 0.0f,
-            -0.2f + facePos[0], 0.1f + facePos[1], 0.0f,
-        };
-
-        GLfloat rightEyeVertices[] = {
-            0.3f + facePos[0], 0.1f + facePos[1], 0.0f,
-            0.3f + facePos[0], 0.2f + facePos[1], 0.0f,
-            0.2f + facePos[0], 0.2f + facePos[1], 0.0f,
-            0.2f + facePos[0], 0.1f + facePos[1], 0.0f
-        };
-
-
-        GLfloat mouthVertices[] = {
-            -0.3f + facePos[0],  -0.15f + facePos[1], 0.0f,
-            0.3f + facePos[0],  -0.15f + facePos[1], 0.0f
-        };
-        updateVBO(&faceVBO, faceVertices, sizeof(faceVertices));
-        updateVBO(&leftEyeVBO, leftEyeVertices, sizeof(leftEyeVertices));
-        updateVBO(&rightEyeVBO, rightEyeVertices, sizeof(rightEyeVertices));
-        updateVBO(&mouthVBO, mouthVertices, sizeof(mouthVertices));
+    case 'w': cameraZ -= 0.1f; break;
+    case 's': cameraZ += 0.1f; break;
+    case 'a': cameraX -= 0.1f; break;
+    case 'd': cameraX += 0.1f; break;
     }
-
     glutPostRedisplay();
 }
+
+void GLAPIENTRY
+MessageCallback(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam);
 
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
-    glutCreateWindow("lab4 Babasa");
-    glutDisplayFunc(face);
+    glutInitWindowSize(1024, 768);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH);
+    glutCreateWindow("simple");
+    init();
+    glutDisplayFunc(displayObject);
     glutKeyboardFunc(onKeyPress);
-    glutMouseFunc(onClick);
-
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-
     GLenum err = glewInit();
-
     if (err == GLEW_OK)
     {
-        GLfloat faceVertices[] = {
-            -0.5f + facePos[0], -0.5f + facePos[1],  0.0f,
-            -0.5f + facePos[0],  0.5f + facePos[1],  0.0f,
-            0.5f + facePos[0],  0.5f + facePos[1],  0.0f,
-            0.5f + facePos[0], -0.5f + facePos[1],  0.0f,
-        };
-
-        GLfloat leftEyeVertices[] = {
-            -0.3f + facePos[0], 0.1f + facePos[1], 0.0f,
-            -0.3f + facePos[0], 0.2f + facePos[1], 0.0f,
-            -0.2f + facePos[0], 0.2f + facePos[1], 0.0f,
-            -0.2f + facePos[0], 0.1f + facePos[1], 0.0f,
-        };
-
-        GLfloat rightEyeVertices[] = {
-            0.3f + facePos[0], 0.1f + facePos[1], 0.0f,
-            0.3f + facePos[0], 0.2f + facePos[1], 0.0f,
-            0.2f + facePos[0], 0.2f + facePos[1], 0.0f,
-            0.2f + facePos[0], 0.1f + facePos[1], 0.0f
-        };
-
-
-        GLfloat mouthVertices[] = {
-            -0.3f + facePos[0],  -0.15f + facePos[1], 0.0f,
-            0.3f + facePos[0],  -0.15f + facePos[1], 0.0f
-        };
-        createVBO(&faceVBO, faceVertices, sizeof(faceVertices));
-        createVBO(&leftEyeVBO, leftEyeVertices, sizeof(leftEyeVertices));
-        createVBO(&rightEyeVBO, rightEyeVertices, sizeof(rightEyeVertices));
-        createVBO(&mouthVBO, mouthVertices, sizeof(mouthVertices));
+        glEnable(GL_DEBUG_OUTPUT);
+        glDebugMessageCallback(MessageCallback, 0);
+        printf("OpenGL version supported by this platform (%s): \n",
+            glGetString(GL_VERSION));
+        printf("OpenGL vendor (%s): \n", glGetString(GL_VENDOR));
         glutMainLoop();
     }
+}
+
+void displayObject()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(cameraX, cameraY, cameraZ, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    // General Light
+    GLfloat lmodelambient[] = { .2, .2, .2, 1.0 };
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodelambient);
+    // Material
+    GLfloat math_ambient[] = { 0.0f, 0.0f, 1.0f, 1.0f }; // Blue
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, math_ambient);
+    // Directional Light
+    GLfloat lightposition0[] = { -1.0f, 0.0f, 2.0f, 1.0f };
+    GLfloat lightcolor0[] = { 0.5f, 0.2f, 0.2f, 1.0f };
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightcolor0);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightposition0);
+    // Spotlight
+    GLfloat lightposition1[] = { 0.0f, 4.0f, 0.0f, 1.0f };
+    GLfloat lightcolor1[] = { 1.0f, 0.2f, 0.2f, 1.0f };
+    GLfloat spotdirection[] = { 0.0f, -1.0f, 0.0f };
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, lightcolor1);
+    glLightfv(GL_LIGHT1, GL_POSITION, lightposition1);
+    glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spotdirection);
+    glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 10.0);
+
+    // display octahedron
+    glutSolidOctahedron();
+    glFlush();
+}
+
+void GLAPIENTRY MessageCallback(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam)
+{
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+        type, severity, message);
+}
+
+void init()
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60, 1024.0 / 768.0, 1.0, 10.0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
 }
